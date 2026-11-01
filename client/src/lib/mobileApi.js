@@ -8,12 +8,23 @@ const BASE = 'https://api.openf1.org/v1';
 const hdHeadshot = (url) => url ? url.replace('/1col/', '/4col/') : url;
 
 
+// Global request throttle: max 1 request per 400ms to respect OpenF1 rate limits.
+let lastReq = 0;
+async function throttle() {
+  const now = Date.now();
+  const wait = 400 - (now - lastReq);
+  if (wait > 0) await new Promise((r) => setTimeout(r, wait));
+  lastReq = Date.now();
+}
+
 async function fetchJson(path, attempt = 0) {
+  await throttle();
   const res = await fetch(`${BASE}${path}`, {
     headers: {},
   });
-  if ((res.status === 429 || res.status >= 500) && attempt < 2) {
-    const wait = 1500 * (attempt + 1);
+  if ((res.status === 429 || res.status >= 500) && attempt < 5) {
+    // Exponential backoff with jitter: 2s, 4s, 8s, 16s, 32s + random
+    const wait = Math.min(32000, 2000 * Math.pow(2, attempt)) + Math.random() * 1000;
     await new Promise((r) => setTimeout(r, wait));
     return fetchJson(path, attempt + 1);
   }
