@@ -12,7 +12,7 @@ const hdHeadshot = (url) => url ? url.replace('/1col/', '/4col/') : url;
 let lastReq = 0;
 async function throttle() {
   const now = Date.now();
-  const wait = 400 - (now - lastReq);
+  const wait = 100 - (now - lastReq);
   if (wait > 0) await new Promise((r) => setTimeout(r, wait));
   lastReq = Date.now();
 }
@@ -62,7 +62,7 @@ function latestByDriver(rows) {
 const POINTS = [25, 18, 15, 12, 10, 8, 6, 4, 2, 1];
 const pointsFor = (pos) => (pos >= 1 && pos <= 10 ? POINTS[pos - 1] : 0);
 
-const STANDINGS_TTL = 60 * 60 * 1000;
+const STANDINGS_TTL = 6 * 60 * 60 * 1000;
 
 function readCache(key) {
   try {
@@ -71,6 +71,17 @@ function readCache(key) {
     const { savedAt, data } = JSON.parse(raw);
     if (Date.now() - savedAt > STANDINGS_TTL) return null;
     return data;
+  } catch {
+    return null;
+  }
+}
+
+// Returns stale data even if expired (for instant display), null if none.
+function readStale(key) {
+  try {
+    const raw = localStorage.getItem(key);
+    if (!raw) return null;
+    return JSON.parse(raw).data;
   } catch {
     return null;
   }
@@ -250,11 +261,8 @@ async function timing(sessionKey) {
   };
 }
 
-async function driverStandings(year = 2026) {
+async function computeDriverStandings(year) {
   const key = `f1-mobile-standings-drivers-${year}`;
-  const hit = readCache(key);
-  if (hit) return hit;
-
   const sessions = await openf1.sessions({ year, session_name: 'Race' });
   const now = new Date().toISOString();
   const done = sessions.filter((s) => s.date_start < now);
@@ -300,11 +308,20 @@ async function driverStandings(year = 2026) {
   return data;
 }
 
-async function constructorStandings(year = 2026) {
-  const key = `f1-mobile-standings-constructors-${year}`;
+async function driverStandings(year = 2026) {
+  const key = `f1-mobile-standings-drivers-${year}`;
   const hit = readCache(key);
   if (hit) return hit;
+  const stale = readStale(key);
+  if (stale) {
+    computeDriverStandings(year).catch(() => {});
+    return stale;
+  }
+  return computeDriverStandings(year);
+}
 
+async function computeConstructorStandings(year) {
+  const key = `f1-mobile-standings-constructors-${year}`;
   const sessions = await openf1.sessions({ year, session_name: 'Race' });
   const now = new Date().toISOString();
   const done = sessions.filter((s) => s.date_start < now);
@@ -335,6 +352,18 @@ async function constructorStandings(year = 2026) {
   const data = { year: Number(year), races_counted: done.length, table };
   writeCache(key, data);
   return data;
+}
+
+async function constructorStandings(year = 2026) {
+  const key = `f1-mobile-standings-constructors-${year}`;
+  const hit = readCache(key);
+  if (hit) return hit;
+  const stale = readStale(key);
+  if (stale) {
+    computeConstructorStandings(year).catch(() => {});
+    return stale;
+  }
+  return computeConstructorStandings(year);
 }
 
 async function schedule(year = 2026) {
