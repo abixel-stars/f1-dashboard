@@ -4,6 +4,9 @@
 // no changes. Standings are cached in localStorage for 1h to avoid
 // recomputation on every launch.
 const BASE = 'https://api.openf1.org/v1';
+// Upgrade OpenF1 headshot URLs from 1col (tiny) to 4col (HD).
+const hdHeadshot = (url) => url ? url.replace('/1col/', '/4col/') : url;
+
 
 async function fetchJson(path, attempt = 0) {
   const res = await fetch(`${BASE}${path}`, {
@@ -145,7 +148,7 @@ async function drivers(sessionKey) {
     team_name: d.team_name,
     team_colour: d.team_colour,
     country_code: d.country_code,
-    headshot_url: d.headshot_url,
+    headshot_url: hdHeadshot(d.headshot_url),
   }));
 }
 
@@ -204,7 +207,7 @@ async function timing(sessionKey) {
       full_name: info.full_name,
       team_name: info.team_name,
       team_colour: info.team_colour,
-      headshot_url: info.headshot_url,
+      headshot_url: hdHeadshot(info.headshot_url),
       gap_to_leader: iv.gap_to_leader ?? null,
       interval: iv.interval ?? null,
       last_lap: lastLap ? {
@@ -276,7 +279,7 @@ async function driverStandings(year = 2026) {
       full_name: d.full_name,
       team_name: d.team_name,
       team_colour: d.team_colour,
-      headshot_url: d.headshot_url,
+      headshot_url: hdHeadshot(d.headshot_url),
       ...t,
     };
   });

@@ -2,16 +2,26 @@ import { useEffect, useState } from 'react';
 import { fmtCountdown, countdownParts, fmtDateTime } from '../lib/format';
 
 // Live-updating countdown block: tabular mono, ink on ground.
-export function Countdown({ targetIso, compact = false }) {
-  const [parts, setParts] = useState(() => countdownParts(targetIso));
+export function Countdown({ targetIso, endIso, compact = false }) {
+  const [now, setNow] = useState(() => Date.now());
 
   useEffect(() => {
-    setParts(countdownParts(targetIso));
-    const id = setInterval(() => setParts(countdownParts(targetIso)), 1000);
+    const id = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(id);
-  }, [targetIso]);
+  }, []);
 
-  if (parts.past) {
+  const start = new Date(targetIso).getTime();
+  const end = endIso ? new Date(endIso).getTime() : null;
+
+  // Session is live only while actually running; ended sessions show END.
+  if (end && now > end) {
+    return (
+      <span className="font-condensed font-semibold text-sm tracking-[0.2em] text-muted uppercase">
+        End
+      </span>
+    );
+  }
+  if (now >= start && (!end || now <= end)) {
     return (
       <span className="flex items-center gap-1.5 font-condensed font-semibold text-sm tracking-[0.2em] text-f1red uppercase">
         <span className="live-dot inline-block w-1.5 h-1.5 rounded-full bg-f1red" />
@@ -19,6 +29,7 @@ export function Countdown({ targetIso, compact = false }) {
       </span>
     );
   }
+  const parts = countdownParts(targetIso);
   return (
     <span className={`font-mono font-bold ${compact ? 'text-sm' : 'text-lg'} text-ink tnum`}>
       {fmtCountdown(parts)}
@@ -30,6 +41,7 @@ export function Countdown({ targetIso, compact = false }) {
 // screen's main data element and carries the one hue; the rest stay neutral.
 export function SessionCountdown({ label, session, hot = false }) {
   if (!session) return null;
+  const endIso = session.date_end || null;
   return (
     <div className="flex items-center justify-between px-3 py-2.5 bg-ground border-b border-rule/60 last:border-b-0">
       <div className="flex items-center gap-2.5">
@@ -43,7 +55,7 @@ export function SessionCountdown({ label, session, hot = false }) {
           </div>
         </div>
       </div>
-      <Countdown targetIso={session.date_start} compact />
+      <Countdown targetIso={session.date_start} endIso={endIso} compact />
     </div>
   );
 }

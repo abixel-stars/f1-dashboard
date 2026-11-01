@@ -37,7 +37,7 @@ export default function TowerRow({ row, index, isFav, onToggleFav, onSelect }) {
   return (
     <div
       className="tower-row grid items-center gap-x-2 px-4 py-[7px] border-b border-rule/60 cursor-pointer hover:bg-surface press"
-      style={{ gridTemplateColumns: '28px 4px minmax(56px,68px) 1fr auto' }}
+      style={{ gridTemplateColumns: '28px 4px minmax(96px,112px) 1fr auto' }}
       onClick={() => onSelect(row)}
       role="button"
       tabIndex={0}
@@ -50,8 +50,18 @@ export default function TowerRow({ row, index, isFav, onToggleFav, onSelect }) {
       </span>
       {/* Team colour stripe: data only */}
       <span className="h-9 w-1" style={{ background: teamColor(row.team_colour) }} />
-      {/* Driver acronym + tyre */}
+      {/* Driver photo + acronym + tyre */}
       <span className="flex items-center gap-1.5 min-w-0">
+        {row.headshot_url ? (
+          <img
+            src={row.headshot_url}
+            alt={row.full_name || row.name_acronym}
+            className="w-8 h-8 rounded-full object-cover object-top shrink-0 bg-surface"
+            loading="lazy"
+          />
+        ) : (
+          <span className="w-8 h-8 rounded-full bg-surface shrink-0" aria-hidden />
+        )}
         <span className="font-condensed font-bold text-base tracking-wider text-ink truncate">
           {row.name_acronym}
         </span>
