@@ -7,7 +7,7 @@ const BASE = 'https://api.openf1.org/v1';
 
 async function fetchJson(path, attempt = 0) {
   const res = await fetch(`${BASE}${path}`, {
-    headers: { 'User-Agent': 'f1-dashboard-mobile/1.0' },
+    headers: {},
   });
   if ((res.status === 429 || res.status >= 500) && attempt < 2) {
     const wait = 1500 * (attempt + 1);

@@ -1,47 +1,27 @@
-import { LayoutGrid, Timer, Trophy, CalendarDays } from 'lucide-react';
-
-const TABS = [
-  { id: 'widget', label: 'WIDGET', icon: LayoutGrid },
-  { id: 'timing', label: 'TIMING', icon: Timer },
-  { id: 'standings', label: 'STANDINGS', icon: Trophy },
-  { id: 'schedule', label: 'SCHEDULE', icon: CalendarDays },
-];
-
-export default function Header({ tab, setTab }) {
+// GRIDX top bar: product mark + wordmark on the left, live mark on the right.
+// Flat ground, one 1px rule below. No hero, no strip.
+export default function Header() {
   return (
-    <header className="sticky top-0 z-40">
-      {/* F1 red top strip */}
-      <div className="bg-f1red px-4 pt-3 pb-2">
-        <div className="flex items-center gap-2">
-          <span className="font-arcade text-[10px] text-white tracking-wider">F1 LIVE</span>
-          <span className="font-condensed font-semibold text-white/90 text-sm tracking-[0.2em] uppercase">
-            Dashboard
-          </span>
-          <span className="ml-auto flex items-center gap-1.5">
-            <span className="live-dot inline-block w-2 h-2 rounded-full bg-white" />
-            <span className="font-condensed text-xs font-semibold text-white tracking-widest">2026</span>
-          </span>
+    <header className="sticky top-0 z-40 bg-ground border-b border-rule">
+      <div className="flex items-center gap-2.5 px-4 h-14">
+        <img
+          src="./gridx-logo.jpg"
+          alt="GRIDX"
+          className="w-8 h-8 rounded-[2px] object-cover shrink-0"
+        />
+        <div className="leading-none">
+          <div className="font-condensed font-bold text-xl tracking-[0.18em] text-ink">
+            GRIDX
+          </div>
+          <div className="font-condensed font-medium text-[11px] tracking-[0.28em] text-muted uppercase">
+            Live timing
+          </div>
         </div>
+        <span className="ml-auto flex items-center gap-1.5">
+          <span className="live-dot inline-block w-2 h-2 rounded-full bg-f1red" />
+          <span className="font-mono text-[11px] text-muted tnum">2026</span>
+        </span>
       </div>
-      {/* Tab bar */}
-      <nav className="bg-panel border-b border-white/10 px-2">
-        <div className="flex">
-          {TABS.map(({ id, label, icon: Icon }) => (
-            <button
-              key={id}
-              onClick={() => setTab(id)}
-              className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 font-condensed font-semibold text-sm tracking-[0.15em] uppercase border-b-2 transition-colors ${
-                tab === id
-                  ? 'text-white border-f1red'
-                  : 'text-muted border-transparent hover:text-white/80'
-              }`}
-            >
-              <Icon size={16} strokeWidth={2.2} />
-              <span className="hidden sm:inline">{label}</span>
-            </button>
-          ))}
-        </div>
-      </nav>
     </header>
   );
 }

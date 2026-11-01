@@ -1,9 +1,13 @@
 import { useEffect, useState } from 'react';
-import { RefreshCw, Flag } from 'lucide-react';
+import { RefreshCw } from 'lucide-react';
 import { api } from '../lib/api';
 import TowerRow from './TowerRow';
 
-const TYPES = ['Race', 'Qualifying', 'Practice'];
+const TYPES = [
+  { id: 'Race', short: 'RACE' },
+  { id: 'Qualifying', short: 'QUALI' },
+  { id: 'Practice', short: 'FP' },
+];
 
 // Map an OpenF1 session_name to one of our selector types.
 function toSelectorType(name) {
@@ -59,86 +63,114 @@ export default function TimingTower({ fav, onToggleFav, onSelectDriver }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [type]);
 
+  const now = Date.now();
+  const isLive = session &&
+    new Date(session.date_start).getTime() <= now &&
+    new Date(session.date_end).getTime() >= now;
+
   return (
     <div>
-      {/* Session selector */}
-      <div className="flex items-center gap-2 px-3 py-2.5 bg-panel border-b border-white/10">
-        <Flag size={15} className="text-f1red shrink-0" />
-        <div className="flex gap-1.5">
-          {TYPES.map((t) => (
+      {/* Session selector: text tabs, active marked by the 1px accent line
+          lying on the rule, exactly as wide as the label. */}
+      <div className="flex items-stretch border-b border-rule px-4">
+        {TYPES.map(({ id, short }) => {
+          const active = type === id;
+          return (
             <button
-              key={t}
-              onClick={() => { setManualType(true); setType(t); }}
-              className={`px-3 py-1 font-condensed font-semibold text-[13px] tracking-[0.12em] uppercase rounded-sm border transition-colors ${
-                type === t
-                  ? 'bg-f1red border-f1red text-white'
-                  : 'bg-transparent border-white/15 text-muted hover:text-white hover:border-white/40'
+              key={id}
+              onClick={() => { setManualType(true); setType(id); }}
+              aria-pressed={active}
+              className={`press relative mr-6 py-3 font-condensed font-semibold text-[14px] tracking-[0.18em] uppercase ${
+                active ? 'text-ink' : 'text-muted hover:text-ink/70'
               }`}
             >
-              {t === 'Practice' ? 'FP' : t.slice(0, 4).toUpperCase()}
+              {short}
+              <span
+                aria-hidden
+                className={`absolute left-0 right-0 -bottom-px h-px ${
+                  active ? 'bg-f1red' : 'bg-transparent'
+                }`}
+              />
             </button>
-          ))}
-        </div>
+          );
+        })}
         <button
           onClick={() => load(type)}
-          className="ml-auto p-1.5 text-muted hover:text-white"
+          className="press ml-auto my-auto p-2 text-muted hover:text-ink"
           aria-label="Refresh timing"
         >
-          <RefreshCw size={15} />
+          <RefreshCw size={15} strokeWidth={1.5} />
         </button>
       </div>
 
       {session && (
-        <div className="px-3 py-2 flex items-baseline justify-between border-b border-white/10 bg-row">
+        <div className="px-4 py-3 flex items-baseline justify-between border-b border-rule">
           <div>
-            <div className="font-condensed font-bold text-lg tracking-wide uppercase">
-              {session.location} <span className="text-f1red">GP</span>
+            <div className="flex items-center gap-2">
+              {isLive && (
+                <span className="flex items-center gap-1.5">
+                  <span className="live-dot inline-block w-1.5 h-1.5 rounded-full bg-f1red" />
+                  <span className="font-condensed font-semibold text-[12px] tracking-[0.2em] text-f1red uppercase">
+                    Live
+                  </span>
+                </span>
+              )}
+              <h1 className="font-condensed font-bold text-2xl tracking-wide uppercase text-ink">
+                {session.location} GP
+              </h1>
             </div>
-            <div className="font-condensed text-[13px] text-muted tracking-widest uppercase">
+            <div className="font-condensed text-[13px] text-muted tracking-[0.14em] uppercase mt-0.5">
               {session.session_name} - {session.circuit_short_name}
             </div>
           </div>
           {updatedAt && (
-            <div className="font-mono text-[10px] text-muted">
-              {new Date(updatedAt).toLocaleTimeString('en-GB')}
+            <div className="text-right shrink-0 ml-3">
+              <div className="font-condensed text-[11px] tracking-[0.2em] text-muted uppercase">
+                Updated
+              </div>
+              <div className="font-mono text-[11px] text-muted tnum">
+                {new Date(updatedAt).toLocaleTimeString('en-GB')}
+              </div>
             </div>
           )}
         </div>
       )}
 
       {loading && (
-        <div className="p-6 space-y-2">
+        <div className="p-4 space-y-2" aria-label="Loading timing">
           {Array.from({ length: 10 }).map((_, i) => (
-            <div key={i} className="h-10 bg-row animate-pulse rounded-sm" />
+            <div key={i} className="h-10 bg-surface animate-pulse" />
           ))}
         </div>
       )}
 
       {error && (
-        <div className="p-6 text-center">
-          <p className="font-condensed text-muted tracking-wider">COULD NOT LOAD TIMING DATA</p>
-          <p className="font-mono text-xs text-muted/70 mt-1">{error}</p>
+        <div className="p-8 text-center">
+          <p className="font-condensed font-semibold text-lg tracking-[0.12em] text-ink uppercase">
+            Could not load timing data
+          </p>
+          <p className="font-mono text-xs text-muted mt-1">{error}</p>
           <button
             onClick={() => load(type)}
-            className="mt-3 px-4 py-1.5 bg-f1red text-white font-condensed font-semibold text-sm tracking-widest rounded-sm"
+            className="press mt-4 px-6 py-2 bg-f1red text-white font-condensed font-semibold text-sm tracking-[0.18em] uppercase"
           >
-            RETRY
+            Retry
           </button>
         </div>
       )}
 
       {!loading && !error && (
         <div className="tower-scroll overflow-x-auto">
-          <div className="min-w-[430px]">
-            {/* Column headers */}
+          <div className="min-w-[460px]">
+            {/* Column headers: small, muted, sentence case per app rules. */}
             <div
-              className="grid items-center gap-x-2 px-2 py-1.5 bg-panel border-b border-white/10 font-condensed text-[11px] font-semibold tracking-[0.15em] text-muted uppercase"
-              style={{ gridTemplateColumns: '26px 4px minmax(52px,64px) 1fr auto' }}
+              className="grid items-center gap-x-2 px-4 py-2 border-b border-rule font-condensed text-[12px] font-medium tracking-[0.08em] text-muted"
+              style={{ gridTemplateColumns: '28px 4px minmax(56px,68px) 1fr auto' }}
             >
-              <span className="text-center">POS</span>
+              <span className="text-center">Pos</span>
               <span />
-              <span>DRV</span>
-              <span>GAP / INT / LAST / BEST</span>
+              <span>Driver</span>
+              <span>Gap / Last / Best</span>
               <span className="w-[25px]" />
             </div>
             {tower.map((row, i) => (

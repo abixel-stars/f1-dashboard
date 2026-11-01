@@ -1,4 +1,4 @@
-package com.abixel.f1dashboard;
+package com.abixel.gridx;
 
 import com.getcapacitor.BridgeActivity;
 

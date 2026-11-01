@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">F1 Live Dashboard</string>
-    <string name="title_activity_main">F1 Live Dashboard</string>
-    <string name="package_name">com.abixel.f1dashboard</string>
-    <string name="custom_url_scheme">com.abixel.f1dashboard</string>
+    <string name="app_name">GRIDX</string>
+    <string name="title_activity_main">GRIDX</string>
+    <string name="package_name">com.abixel.gridx</string>
+    <string name="custom_url_scheme">com.abixel.gridx</string>
 </resources>
